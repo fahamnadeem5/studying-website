@@ -36,6 +36,9 @@ yarn-error.log*
 # local tooling (portable node downloaded into the workspace)
 /.tools/
 
+# freebuff thread state (logs, run doc, preview metadata)
+/.freebuff/
+
 # sqlite sidecar files (the catalog DB itself is committed)
 /data/*.db-wal
 /data/*.db-shm
