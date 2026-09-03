@@ -1,0 +1,56 @@
+name: Refresh catalog
+
+# Re-scrapes the sources after each exam session and opens a PR with the
+# updated SQLite catalog. Enable "Actions" on the repo for this to run.
+on:
+  schedule:
+    # monthly on the 3rd; new CAIE papers land around Feb/Jun/Oct — bump or
+    # trigger manually with workflow_dispatch after each session release.
+    - cron: "0 4 3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: catalog-refresh
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Reddit is optional: only runs when the secrets are present.
+      - name: Scrape all sources
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+        run: npm run scrape -- --no-stale-marking || npm run scrape -- --sources papacambridge,notes,pmt --no-stale-marking
+
+      - name: Verify the catalog is healthy
+        run: npm run scrape -- --stats
+
+      - name: Open PR with updated catalog
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: refresh resource catalog"
+          branch: chore/catalog-refresh
+          delete-branch: true
+          title: "Catalog refresh (${{ github.event_name }})"
+          body: |
+            Automated re-scrape of papaCambridge, notes, PMT and (when
+            configured) Reddit. Review the DB diff and merge to publish.
+          add-paths: |
+            data/alevelhub.db
