@@ -1,4 +1,27 @@
+Starting A-Level Hub on http://localhost:3000 ...
+(press Ctrl+C to stop)
 
 > alevelhub@0.1.0 dev
-> next dev
+> next dev -p 3000
 
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.102:3000
+✓ Ready in 487ms
+✓ Running next.config.ts took 41ms
+
+ GET /subjects 200 in 862ms (next.js: 657ms, application-code: 205ms)
+ GET /subjects 200 in 46ms (next.js: 4ms, application-code: 41ms)
+ GET / 200 in 102ms (next.js: 38ms, application-code: 64ms)
+ GET / 200 in 60ms (next.js: 3ms, application-code: 57ms)
+ GET / 200 in 77ms (next.js: 3ms, application-code: 74ms)
+ GET /subjects/9702 200 in 626ms (next.js: 573ms, application-code: 52ms)
+ GET /subjects/9702/yearly 200 in 2.5s (next.js: 543ms, application-code: 1918ms)
+ GET /subjects/9702/yearly?kind=qp 200 in 1254ms (next.js: 10ms, application-code: 1244ms)
+ GET /subjects/9702/yearly?year=2025&kind=qp 200 in 140ms (next.js: 10ms, application-code: 130ms)
+ GET /subjects/9702/yearly?year=2025&session=s&kind=qp 200 in 78ms (next.js: 9ms, application-code: 69ms)
+ GET /subjects/9702/yearly?year=2025&session=s&kind=qp&source=pmt 200 in 61ms (next.js: 9ms, application-code: 52ms)
+ GET / 200 in 31ms (next.js: 2ms, application-code: 29ms)
+ GET /subjects/9231 200 in 32ms (next.js: 9ms, application-code: 23ms)
+ GET /subjects/9231/yearly 200 in 966ms (next.js: 7ms, application-code: 959ms)
+ GET /subjects/9231/yearly?kind=qp 200 in 588ms (next.js: 9ms, application-code: 579ms)
