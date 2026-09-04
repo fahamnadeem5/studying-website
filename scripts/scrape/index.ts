@@ -10,7 +10,8 @@
  *   npm run scrape -- --stats           # print catalog stats and exit
  */
 
-import { closeDb, countResources, db, stats } from "../../src/lib/db";
+import { readFileSync } from "node:fs";
+import { closeDb, countResources, db, dbPath, stats } from "../../src/lib/db";
 import { scrapePapaCambridge } from "./papacambridge";
 import { scrapeNotesPapaCambridge } from "./notes_papacambridge";
 import { scrapePmt } from "./pmt";
@@ -118,6 +119,48 @@ function printStats() {
   );
 }
 
+/**
+ * Pre-scrape gate: refuse to touch a committed DB that's in WAL journal
+ * mode. Vercel's serverless filesystem is read-only and can't open a WAL
+ * DB even read-only (SQLite needs to create -wal/-shm sidecars), so a
+ * scrape that flips the file into WAL mode silently breaks deployment.
+ *
+ * Per AGENTS.md: SQLite stores the journal mode in the file header at
+ * offset 18. 1 = rollback (DELETE), 2 = WAL. We read that byte directly
+ * so we don't have to open the DB through the driver.
+ */
+function assertRollbackMode(): void {
+  let buf: Buffer;
+  try {
+    buf = readFileSync(dbPath());
+  } catch {
+    return; // fresh clone, no DB on disk yet — driver will create it
+  }
+  if (buf.length < 24) return; // not a real SQLite file yet
+  const journalMode = buf.readUInt32BE(20);
+  if (journalMode === 2) {
+    console.error(
+      [
+        "",
+        "  catalog is in WAL journal mode.",
+        "",
+        "  A WAL DB cannot be opened read-only on Vercel's serverless",
+        "  filesystem (SQLite needs writable -wal/-shm sidecars).",
+        "  Pushing this file would break every page at deploy time.",
+        "",
+        "  Fix locally:",
+        "    sqlite3 data/alevelhub.db 'PRAGMA journal_mode=DELETE'",
+        "  Then verify the header byte before committing:",
+        "    xxd -s 18 -l 4 data/alevelhub.db    # should show 01000000",
+        "",
+        "  See AGENTS.md — \"Committed SQLite catalog\".",
+        "",
+      ].join("\n")
+    );
+    process.exit(1);
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.stats) {
@@ -129,6 +172,8 @@ async function main() {
     console.error("--to must be >= --from");
     process.exit(1);
   }
+
+  assertRollbackMode();
 
   const t0 = Date.now();
   console.log(

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import AuroraBackground from "@/components/AuroraBackground";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -24,46 +26,121 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-white font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-        <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-white/85 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/85">
-          <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-6 px-4">
-            <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-sky-500 text-sm text-white">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var t = localStorage.getItem('theme');
+                  if (t === 'light' || t === 'dark') {
+                    document.documentElement.setAttribute('data-theme', t);
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body style={{ background: "var(--surface)", color: "var(--text)" }}>
+        <AuroraBackground />
+
+        <header
+          className="glass sticky top-0 z-30"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
+          <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 font-bold tracking-tight transition-opacity hover:opacity-80"
+              style={{ color: "var(--text)" }}
+            >
+              <span
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-sm font-black text-white"
+                style={{
+                  background: "linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%)",
+                  boxShadow: "0 0 16px -4px color-mix(in srgb, var(--brand) 60%, transparent)",
+                }}
+              >
                 AL
               </span>
               <span className="hidden sm:inline">A-Level Hub</span>
             </Link>
-            <nav className="ml-auto flex items-center gap-1 text-sm">
+
+            <nav className="ml-auto flex items-center gap-1 text-sm font-medium">
               <Link
                 href="/"
-                className="rounded-md px-3 py-1.5 text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                className="rounded-lg px-3 py-1.5 transition-colors hover:bg-[var(--surface-muted)]"
+                style={{ color: "var(--text-muted)" }}
               >
                 Subjects
               </Link>
               <Link
                 href="/search"
-                className="rounded-md px-3 py-1.5 text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                className="rounded-lg px-3 py-1.5 transition-colors hover:bg-[var(--surface-muted)]"
+                style={{ color: "var(--text-muted)" }}
               >
                 Search
               </Link>
+              <Link
+                href="/about"
+                className="rounded-lg px-3 py-1.5 transition-colors hover:bg-[var(--surface-muted)]"
+                style={{ color: "var(--text-muted)" }}
+              >
+                About
+              </Link>
+              <div className="ml-1">
+                <ThemeToggle />
+              </div>
             </nav>
           </div>
         </header>
-        <main className="flex-1">{children}</main>
-        <footer className="border-t border-zinc-200 py-8 dark:border-zinc-800">
-          <div className="mx-auto w-full max-w-6xl px-4 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
-            <p className="font-medium text-zinc-600 dark:text-zinc-300">
-              A-Level Hub — a community index of CAIE A-Level resources.
-            </p>
-            <p className="mt-1 max-w-3xl">
-              This site does not host any exam papers or books. It indexes links to
-              external resources hosted by PapaCambridge, Physics &amp; Maths Tutor,
-              and files shared by students on Reddit. We are not affiliated with
-              Cambridge Assessment International Education. Papers are © Cambridge
-              Assessment International Education; please only use them for personal
-              study, and respect each host&apos;s terms.
-            </p>
+
+        <main style={{ minHeight: "calc(100vh - 56px - 120px)" }}>
+          {children}
+        </main>
+
+        <footer style={{ borderTop: "1px solid var(--border)", background: "var(--surface-muted)" }}>
+          <div
+            className="mx-auto w-full max-w-6xl px-4 py-8 text-xs leading-relaxed"
+            style={{ color: "var(--text-faint)" }}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="max-w-3xl">
+                <p
+                  className="mb-1 font-semibold"
+                  style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}
+                >
+                  A-Level Hub — a community index of CAIE A-Level resources.
+                </p>
+                <p className="max-w-3xl">
+                  This site does not host any exam papers or books. It indexes links
+                  to external resources hosted by PapaCambridge, Physics &amp; Maths
+                  Tutor, and files shared by students on Reddit. We are not
+                  affiliated with Cambridge Assessment International Education. Papers
+                  are &copy; Cambridge Assessment International Education; please
+                  only use them for personal study, and respect each
+                  host&apos;s terms.
+                </p>
+              </div>
+              <div className="flex flex-col gap-1 text-right">
+                <Link
+                  href="/about"
+                  className="transition-colors hover:text-[var(--brand)]"
+                  style={{ color: "var(--text-faint)" }}
+                >
+                  About this site
+                </Link>
+                <Link
+                  href="/search"
+                  className="transition-colors hover:text-[var(--brand)]"
+                  style={{ color: "var(--text-faint)" }}
+                >
+                  Search resources
+                </Link>
+              </div>
+            </div>
           </div>
         </footer>
       </body>

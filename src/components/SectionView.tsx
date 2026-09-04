@@ -10,14 +10,11 @@ interface Props {
   type: "topical" | "notes" | "book";
   title: string;
   blurb: string;
-  /** current `source` query param (already validated string | undefined) */
   activeSource?: string;
 }
 
-/**
- * Shared page body for the topical / notes / books sections:
- * a source filter plus a client-side quick search over the fetched rows.
- */
+const FETCH_CAP = 1500;
+
 export async function SectionView({
   code,
   type,
@@ -32,16 +29,21 @@ export async function SectionView({
     subjectCode: code,
     type,
     source: activeSource,
-    limit: 4000,
+    limit: FETCH_CAP + 1,
   });
   const sources = subjectSources(code, type);
   const sectionPath = type === "book" ? "books" : type;
 
+  const overflowed = rows.length > FETCH_CAP;
+  const visible = overflowed ? rows.slice(0, FETCH_CAP) : rows;
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="mb-4">
-        <h2 className="text-xl font-bold">{title}</h2>
-        <p className="mt-1 max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
+        <h2 style={{ fontSize: "1.5rem", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: "0.25rem" }}>
+          {title}
+        </h2>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", maxWidth: "36rem" }}>
           {blurb}
         </p>
       </div>
@@ -56,19 +58,39 @@ export async function SectionView({
       />
 
       <div className="mt-4">
-        {rows.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700">
+        {visible.length === 0 ? (
+          <div
+            style={{
+              borderRadius: "var(--radius-lg)",
+              border: "1px dashed var(--border)",
+              padding: "2.5rem",
+              textAlign: "center",
+              fontSize: "0.9rem",
+              color: "var(--text-muted)",
+            }}
+          >
             {activeSource
               ? "No resources from this source yet."
               : "No resources indexed yet. Run `npm run scrape` to populate the catalog."}
           </div>
         ) : (
           <>
-            <div className="mb-3 text-xs text-zinc-400">
-              {rows.length} resources
+            <div
+              style={{
+                color: "var(--text-faint)",
+                fontSize: "0.75rem",
+                marginBottom: "0.75rem",
+              }}
+            >
+              {visible.length.toLocaleString()} resources
               {activeSource ? ` from ${siteMeta(activeSource).label}` : ""}
+              {overflowed && (
+                <span style={{ color: "var(--text-muted)", marginLeft: "0.5rem" }}>
+                  (showing the first {FETCH_CAP.toLocaleString()} — narrow with a source filter for more)
+                </span>
+              )}
             </div>
-            <QuickSearch rows={rows} accent={subject.color} />
+            <QuickSearch rows={visible} accent={subject.color} />
           </>
         )}
       </div>

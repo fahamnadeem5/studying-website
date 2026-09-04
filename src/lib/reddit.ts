@@ -9,6 +9,7 @@
  *   plus one of:
  *     REDDIT_REFRESH_TOKEN            (web/installed app)
  *     REDDIT_USERNAME + REDDIT_PASSWORD  (script app — personal use)
+ *     REDDIT_ALLOW_ANONYMOUS=1          (anonymous read-only client_credentials)
  */
 
 const OAUTH_URL = "https://www.reddit.com/api/v1/access_token";
@@ -59,8 +60,14 @@ async function getAccessToken(): Promise<string> {
     params.set("grant_type", "password");
     params.set("username", process.env.REDDIT_USERNAME);
     params.set("password", process.env.REDDIT_PASSWORD);
-  } else {
+  } else if (process.env.REDDIT_ALLOW_ANONYMOUS === "1") {
     params.set("grant_type", "client_credentials");
+  } else {
+    throw new RedditError(
+      "Reddit credentials incomplete. Set REDDIT_REFRESH_TOKEN, " +
+      "or REDDIT_USERNAME + REDDIT_PASSWORD, " +
+      "or REDDIT_ALLOW_ANONYMOUS=1 to opt in to anonymous read-only mode."
+    );
   }
 
   const res = await fetch(OAUTH_URL, {

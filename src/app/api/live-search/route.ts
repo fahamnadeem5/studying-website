@@ -107,9 +107,13 @@ function guessHint(q: string): RedditKindHint {
   return "yearly";
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function mentionsSubject(text: string, subject: SubjectMeta): boolean {
   const t = text.slice(0, 3000);
-  if (new RegExp(`\\b${subject.code}\\b`).test(t)) return true;
-  return new RegExp(subject.shortName, "i").test(t) ||
-    new RegExp(subject.name, "i").test(t);
+  if (new RegExp(`\\b${escapeRegExp(subject.code)}\\b`).test(t)) return true;
+  return new RegExp(escapeRegExp(subject.shortName), "i").test(t) ||
+    new RegExp(escapeRegExp(subject.name), "i").test(t);
 }

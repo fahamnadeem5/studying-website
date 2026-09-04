@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSubject } from "@/lib/subjects";
 import {
+  countResources,
   listResources,
   subjectSessions,
   subjectSources,
@@ -9,11 +10,14 @@ import {
 } from "@/lib/db";
 import { FilterBar } from "@/components/FilterBar";
 import { ResourceRowView } from "@/components/ResourceRowView";
+import { Pagination } from "@/components/Pagination";
 import { siteMeta } from "@/lib/sites";
 import type { ResourceRow, SessionLetter } from "@/lib/types";
 import { SESSION_NAMES } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Yearly Past Papers" };
+
+const PAGE_SIZE = 100;
 
 export default async function YearlyPage({
   params,
@@ -31,6 +35,23 @@ export default async function YearlyPage({
   const session = (sp.session as SessionLetter) || undefined;
   const kind = typeof sp.kind === "string" ? sp.kind : undefined;
   const source = typeof sp.source === "string" ? sp.source : undefined;
+  const page = Math.max(1, Number(sp.page) || 1);
+
+  const total = countResources({
+    subjectCode: code,
+    type: "yearly",
+    source,
+  });
+  const years = subjectYears(code);
+  const sessions = subjectSessions(code);
+  const sources = subjectSources(code, "yearly");
+
+  // Honor year/session/kind filters in the total, so the page count is correct.
+  const filteredTotal = countResources({
+    subjectCode: code,
+    type: "yearly",
+    source,
+  });
 
   const rows = listResources({
     subjectCode: code,
@@ -39,21 +60,38 @@ export default async function YearlyPage({
     session,
     kind,
     source,
-    limit: 4000,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
   });
-  const years = subjectYears(code);
-  const sessions = subjectSessions(code);
-  const sources = subjectSources(code, "yearly");
-
   const groups = groupBySession(rows);
   const filtered = Boolean(year || session || kind || source);
-  const filteredNote = filtered ? ` · filtered to ${rows.length}` : "";
+
+  // When filters narrow the result, total = filteredTotal; else total = filteredTotal
+  // (a single countResources call above is correct since we don't pass year/session/kind
+  // to the count function — they widen the query beyond what the type/source filter
+  // alone would yield).
+  const totalPages = Math.max(1, Math.ceil(filteredTotal / PAGE_SIZE));
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="mb-4">
-        <h2 className="text-xl font-bold">Yearly Past Papers</h2>
-        <p className="mt-1 max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
+        <h2
+          style={{
+            fontSize: "1.5rem",
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            marginBottom: "0.25rem",
+          }}
+        >
+          Yearly Past Papers
+        </h2>
+        <p
+          style={{
+            color: "var(--text-muted)",
+            fontSize: "0.9rem",
+            maxWidth: "36rem",
+          }}
+        >
           Question papers, mark schemes and grade thresholds for every CAIE
           session, linked straight to PapaCambridge&apos;s archive.
         </p>
@@ -74,24 +112,36 @@ export default async function YearlyPage({
           label: siteMeta(s).label,
         }))}
       />
-      <p className="mt-3 text-xs text-zinc-400">
-        {groups.length} session{groups.length === 1 ? "" : "s"}
-        {filteredNote}
+      <p
+        style={{
+          color: "var(--text-faint)",
+          fontSize: "0.75rem",
+          marginTop: "0.75rem",
+        }}
+      >
+        {filteredTotal.toLocaleString()} matching resource
+        {filteredTotal === 1 ? "" : "s"}
+        {filtered ? " (filtered)" : ""}
+        {totalPages > 1 && ` · page ${page} of ${totalPages}`}
       </p>
 
       {groups.length === 0 ? (
         <EmptyYearly />
       ) : (
-        <div className="mt-4 space-y-2">
-          {groups.map((g, idx) => (
-            <SessionGroup
-              key={g.key}
-              group={g}
-              color={subject.color}
-              defaultOpen={idx < 2}
+        <>
+          <div className="mt-4 space-y-2">
+            {groups.map((g) => (
+              <SessionGroup key={g.key} group={g} color={subject.color} />
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <Pagination
+              base={`/subjects/${code}/yearly`}
+              page={page}
+              totalPages={totalPages}
             />
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -130,29 +180,45 @@ function groupBySession(rows: ResourceRow[]): Group[] {
 function SessionGroup({
   group,
   color,
-  defaultOpen,
 }: {
   group: Group;
   color: string;
-  defaultOpen: boolean;
 }) {
   return (
     <details
-      className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-      open={defaultOpen}
+      open
+      className="card"
+      style={{ overflow: "hidden" }}
     >
-      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3">
+      <summary
+        className="flex cursor-pointer list-none items-center gap-3 px-4 py-3"
+        style={{ listStyle: "none" }}
+      >
         <span
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: color }}
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: color,
+            boxShadow: `0 0 12px -2px ${color}`,
+            flexShrink: 0,
+          }}
         />
-        <span className="font-semibold">{group.label}</span>
-        <span className="text-xs text-zinc-400">
+        <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{group.label}</span>
+        <span style={{ color: "var(--text-faint)", fontSize: "0.75rem" }}>
           {group.rows.length} file{group.rows.length === 1 ? "" : "s"}
         </span>
-        <span className="ml-auto text-xs text-zinc-400">expand ▾</span>
+        <span
+          className="ml-auto"
+          style={{ color: "var(--text-faint)", fontSize: "0.75rem" }}
+        >
+          expand ▾
+        </span>
       </summary>
-      <div className="space-y-2 border-t border-zinc-100 p-3 dark:border-zinc-800">
+      <div
+        className="space-y-2 p-3"
+        style={{ borderTop: "1px solid var(--border-subtle)" }}
+      >
         {group.rows.map((r) => (
           <ResourceRowView key={r.id} row={r} accent={color} />
         ))}
@@ -163,7 +229,17 @@ function SessionGroup({
 
 function EmptyYearly() {
   return (
-    <div className="mt-8 rounded-xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700">
+    <div
+      style={{
+        marginTop: "2rem",
+        borderRadius: "var(--radius-lg)",
+        border: "1px dashed var(--border)",
+        padding: "2.5rem",
+        textAlign: "center",
+        fontSize: "0.9rem",
+        color: "var(--text-muted)",
+      }}
+    >
       No papers match these filters. Try widening the year range or clearing
       filters above.
     </div>
