@@ -90,27 +90,42 @@ function open(path: string): DatabaseSync {
       /* read-only fs: will fall back to read-only open below */
     }
   }
-  // Prefer a writable handle (local dev, scrapers). On read-only filesystems
-  // (e.g. serverless) fall back to opening the committed DB read-only.
+  const fail = (stage: string, e: unknown) =>
+    console.error(`[db] ${stage} failed: ${(e as Error).message}`);
+
+  // 1) Writable handle (local dev, scrapers). Enabling WAL requires a
+  //    writable directory for the -wal/-shm sidecars, so this only ever
+  //    succeeds where writes are allowed.
   try {
     const db = new DatabaseSync(path);
     db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
     db.exec(SCHEMA);
     seedSubjects(db);
     return db;
-  } catch {
+  } catch (e) {
+    fail("writable open", e);
+  }
+  // 2) Read-only handle (serverless / read-only filesystems). The committed
+  //    catalog ships in rollback-journal (DELETE) mode, so a read-only open
+  //    needs no sidecar files and cannot hit SQLITE_CANTOPEN.
+  try {
+    const db = new DatabaseSync(path, { readOnly: true });
     // Schema/seed are guaranteed present in a committed DB; a read-only
-    // handle cannot create tables, so skip straight to opening it.
-    try {
-      return new DatabaseSync(path, { readOnly: true });
-    } catch {
-      // No DB on disk at all (fresh clone / first run): serve an empty
-      // in-memory catalog so the site still renders.
-      const mem = new DatabaseSync(":memory:");
-      mem.exec(SCHEMA);
-      seedSubjects(mem);
-      return mem;
-    }
+    // handle cannot create tables, so skip straight to using it.
+    return db;
+  } catch (e) {
+    fail("read-only open", e);
+  }
+  // 3) No DB on disk at all (fresh clone / tracing didn't ship it): serve an
+  //    empty in-memory catalog so the site still renders (empty states).
+  try {
+    const mem = new DatabaseSync(":memory:");
+    mem.exec(SCHEMA);
+    seedSubjects(mem);
+    return mem;
+  } catch (e) {
+    fail("in-memory fallback", e);
+    throw new Error(`A-Level Hub catalog unavailable: ${(e as Error).message}`);
   }
 }
 
