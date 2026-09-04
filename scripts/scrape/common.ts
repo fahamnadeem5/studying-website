@@ -154,6 +154,46 @@ export async function urlExists(
   }
 }
 
+/**
+ * Probe that follows redirects and only returns true when the final response
+ * is genuinely a PDF. Many paper CDNs soft-404 missing files with a redirect
+ * to their HTML homepage, so a 3xx-then-2xx status alone is not enough — we
+ * check the final content type / URL too.
+ */
+export async function urlIsPdf(
+  url: string,
+  opts: HttpOptions = {}
+): Promise<boolean> {
+  try {
+    const res = await httpFetch(url, {
+      method: "GET",
+      retries: 1,
+      timeoutMs: 25_000,
+      headers: { Range: "bytes=0-0" },
+      ...opts,
+    });
+    let isPdf = false;
+    if (res.status === 200 || res.status === 206) {
+      const ctype = (res.headers.get("content-type") ?? "").toLowerCase();
+      const finalPath = (res.url || url).split("?")[0].toLowerCase();
+      isPdf =
+        ctype.includes("application/pdf") ||
+        (!ctype.includes("html") &&
+          !ctype.includes("text/") &&
+          finalPath.endsWith(".pdf"));
+    }
+    // We only asked for the first byte — don't download the whole PDF.
+    try {
+      await res.body?.cancel();
+    } catch {
+      /* ignore */
+    }
+    return isPdf;
+  } catch {
+    return false;
+  }
+}
+
 /* ------------------------------ html utils ------------------------------ */
 
 export function decodeEntities(s: string): string {

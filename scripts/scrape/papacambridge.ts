@@ -16,7 +16,7 @@
  *  3. upsert everything found into the local catalog.
  */
 
-import { mapPool, urlExists } from "./common";
+import { mapPool, urlIsPdf } from "./common";
 import { upsertResource } from "../../src/lib/db";
 import { getSubject } from "../../src/lib/subjects";
 import { yearlyPaperTitle } from "../../src/lib/format";
@@ -45,7 +45,8 @@ export function cdnUrl(filename: string): string {
 }
 
 function two(yy: number): string {
-  return String(yy).padStart(2, "0");
+  // CAIE filenames use the last two digits of the year (s24 = May/June 2024).
+  return String(yy % 100).padStart(2, "0");
 }
 
 /** Components that plausibly existed in a given year for a subject. */
@@ -98,9 +99,9 @@ export async function scrapePapaCambridge(
       8,
       async (c) => ({
         c,
-        ok: await urlExists(cdnUrl(c.file), {
+        ok: await urlIsPdf(cdnUrl(c.file), {
           minSpacingMs: 60,
-          retries: 0,
+          retries: 1,
         }),
       })
     );
@@ -148,9 +149,9 @@ export async function scrapePapaCambridge(
     }
 
     const results = await mapPool(tasks, 8, async (t, i) => {
-      const ok = await urlExists(cdnUrl(t.file), {
+      const ok = await urlIsPdf(cdnUrl(t.file), {
         minSpacingMs: 60,
-        retries: 0,
+        retries: 1,
       });
       if (i % 400 === 0 && i > 0) {
         log(
