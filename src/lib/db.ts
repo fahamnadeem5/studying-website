@@ -93,12 +93,13 @@ function open(path: string): DatabaseSync {
   const fail = (stage: string, e: unknown) =>
     console.error(`[db] ${stage} failed: ${(e as Error).message}`);
 
-  // 1) Writable handle (local dev, scrapers). Enabling WAL requires a
-  //    writable directory for the -wal/-shm sidecars, so this only ever
-  //    succeeds where writes are allowed.
+  // 1) Writable handle (local dev, scrapers). Deliberately stays in the
+  //    default rollback-journal (DELETE) mode: forcing WAL here would flip
+  //    the committed file's header and demand writable -wal/-shm sidecars,
+  //    which breaks read-only opens on serverless (Vercel) filesystems.
   try {
     const db = new DatabaseSync(path);
-    db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
+    db.exec("PRAGMA foreign_keys = ON;");
     db.exec(SCHEMA);
     seedSubjects(db);
     return db;
