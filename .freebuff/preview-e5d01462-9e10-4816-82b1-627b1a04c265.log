@@ -7,29 +7,9 @@ Starting A-Level Hub on http://localhost:3000 ...
 ▲ Next.js 16.3.4 (Turbopack)
 - Local:         http://localhost:3000
 - Network:       http://192.168.0.100:3000
-✓ Ready in 5.6s
-✓ Running next.config.ts took 536ms
+✓ Ready in 498ms
+✓ Running next.config.ts took 41ms
 
- GET / 200 in 775ms (next.js: 493ms, application-code: 283ms)
- GET /subjects 200 in 73ms (next.js: 23ms, application-code: 51ms)
- GET /subjects/9709/yearly 200 in 5.3s (next.js: 531ms, application-code: 4.7s)
- GET /api/search?q=9709_s26_qp_13 200 in 178ms (next.js: 141ms, application-code: 37ms)
- GET /subjects/9709/yearly 200 in 5.2s (next.js: 9ms, application-code: 5.2s)
- GET /subjects/9709/yearly 200 in 5.2s (next.js: 8ms, application-code: 5.1s)
- GET /subjects/9709/yearly 200 in 4.9s (next.js: 8ms, application-code: 4.9s)
- GET /subjects/9709/yearly 200 in 5.2s (next.js: 8ms, application-code: 5.2s)
- HEAD /subjects/9709/yearly 200 in 5.1s (next.js: 9ms, application-code: 5.1s)
- GET / 200 in 75ms (next.js: 4ms, application-code: 72ms)
- GET / 200 in 111ms (next.js: 5ms, application-code: 106ms)
- GET /subjects/9709/yearly 200 in 6.5s (next.js: 9ms, application-code: 6.4s)
- GET / 200 in 68ms (next.js: 3ms, application-code: 65ms)
- GET /subjects/9709 200 in 523ms (next.js: 491ms, application-code: 32ms)
- GET /subjects/9709/yearly 200 in 934ms (next.js: 8ms, application-code: 926ms)
- GET / 200 in 76ms (next.js: 4ms, application-code: 72ms)
- GET /subjects/9709 200 in 29ms (next.js: 8ms, application-code: 21ms)
- GET /subjects/9709/yearly 200 in 1396ms (next.js: 8ms, application-code: 1388ms)
- GET /subjects/9709/yearly 200 in 637ms (next.js: 12ms, application-code: 625ms)
- GET /subjects/9709/yearly?kind=qp 200 in 562ms (next.js: 8ms, application-code: 553ms)
- GET /subjects/9709/notes 200 in 957ms (next.js: 925ms, application-code: 32ms)
- GET /subjects/9709/yearly 200 in 1010ms (next.js: 9ms, application-code: 1001ms)
- GET / 200 in 28ms (next.js: 3ms, application-code: 25ms)
+ GET / 200 in 352ms (next.js: 159ms, application-code: 194ms)
+ GET / 200 in 46ms (next.js: 4ms, application-code: 43ms)
+ GET / 200 in 71ms (next.js: 4ms, application-code: 67ms)
