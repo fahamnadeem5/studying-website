@@ -15,6 +15,24 @@ import { siteMeta } from "@/lib/sites";
 import type { ResourceRow, SessionLetter } from "@/lib/types";
 import { SESSION_NAMES } from "@/lib/types";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}): Promise<Metadata> {
+  const { code } = await params;
+  const subject = getSubject(code);
+  if (!subject) return {};
+  return {
+    title: `${subject.name} — Yearly Past Papers`,
+    description: `Yearly past papers for ${subject.name} (${subject.code}): question papers, mark schemes and grade thresholds from 2009 onwards.`,
+    openGraph: {
+      title: `${subject.name} — Yearly Papers | A-Level Hub`,
+      description: `Question papers, mark schemes and grade thresholds for ${subject.name} (${subject.code}).`,
+    },
+  };
+}
+
 export const metadata: Metadata = { title: "Yearly Past Papers" };
 
 const PAGE_SIZE = 100;

@@ -3,6 +3,24 @@ import { notFound } from "next/navigation";
 import { getSubject } from "@/lib/subjects";
 import { SectionView } from "@/components/SectionView";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}): Promise<Metadata> {
+  const { code } = await params;
+  const subject = getSubject(code);
+  if (!subject) return {};
+  return {
+    title: `${subject.name} — Notes`,
+    description: `Free revision notes and summaries for ${subject.name} (${subject.code}) from community sources.`,
+    openGraph: {
+      title: `${subject.name} — Notes | A-Level Hub`,
+      description: `Revision notes and summaries for ${subject.name} (${subject.code}).`,
+    },
+  };
+}
+
 export const metadata: Metadata = { title: "Notes" };
 
 export default async function NotesPage({

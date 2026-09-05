@@ -3,6 +3,24 @@ import { notFound } from "next/navigation";
 import { getSubject } from "@/lib/subjects";
 import { SectionView } from "@/components/SectionView";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}): Promise<Metadata> {
+  const { code } = await params;
+  const subject = getSubject(code);
+  if (!subject) return {};
+  return {
+    title: `${subject.name} — Books`,
+    description: `CAIE A-Level ${subject.name} (${subject.code}) coursebooks and textbooks shared by the student community.`,
+    openGraph: {
+      title: `${subject.name} — Books | A-Level Hub`,
+      description: `Textbooks and coursebooks for ${subject.name} (${subject.code}).`,
+    },
+  };
+}
+
 export const metadata: Metadata = { title: "Books" };
 
 export default async function BooksPage({

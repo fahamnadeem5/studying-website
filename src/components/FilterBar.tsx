@@ -17,6 +17,17 @@ interface Props {
   color: string;
 }
 
+const selectBaseStyle: React.CSSProperties = {
+  borderRadius: "var(--radius)",
+  border: "1px solid var(--border)",
+  background: "var(--surface-elevated)",
+  padding: "0.45rem 0.7rem",
+  fontSize: "0.8rem",
+  color: "var(--text)",
+  outline: "none",
+  transition: "border-color 0.15s, box-shadow 0.15s",
+};
+
 export function FilterBar({ base, years, sessions, kinds, sources, color }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -38,76 +49,91 @@ export function FilterBar({ base, years, sessions, kinds, sources, color }: Prop
     router.push(qs ? `${base}?${qs}` : base, { scroll: false });
   }
 
-  const selectCls =
-    "rounded-lg border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200";
+  const hasAnyFilter = Boolean(
+    current.year || current.session || current.kind || current.source
+  );
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <label className="text-xs font-medium text-zinc-500" htmlFor="f-year">
-        Year
-      </label>
-      <select
-        id="f-year"
-        className={selectCls}
-        value={current.year}
-        onChange={(e) => set("year", e.target.value)}
-      >
-        <option value="">All</option>
-        {years.map((y) => (
-          <option key={y} value={y}>
-            {y}
-          </option>
-        ))}
-      </select>
-
-      <label className="text-xs font-medium text-zinc-500" htmlFor="f-session">
-        Session
-      </label>
-      <select
-        id="f-session"
-        className={selectCls}
-        value={current.session}
-        onChange={(e) => set("session", e.target.value)}
-      >
-        <option value="">All</option>
-        {sessions.map((s) => (
-          <option key={s} value={s}>
-            {SESSION_NAMES[s]}
-          </option>
-        ))}
-      </select>
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.75rem",
+        padding: "0.85rem 1rem",
+        borderRadius: "var(--radius-lg)",
+        background: "var(--surface-muted)",
+        border: "1px solid var(--border)",
+      }}
+    >
+      {/* Chip groups for small option sets */}
+      {years.length > 0 && (
+        <ChipGroup
+          label="Year"
+          options={[{ value: "", label: "All" }, ...years.map((y) => ({ value: String(y), label: String(y) }))]}
+          value={current.year}
+          onChange={(v) => set("year", v)}
+          color={color}
+        />
+      )}
+      {sessions.length > 0 && (
+        <ChipGroup
+          label="Session"
+          options={[
+            { value: "", label: "All" },
+            ...sessions.map((s) => ({ value: s, label: SESSION_NAMES[s] })),
+          ]}
+          value={current.session}
+          onChange={(v) => set("session", v)}
+          color={color}
+        />
+      )}
       {kinds.length > 0 && (
-        <>
-          <label className="text-xs font-medium text-zinc-500" htmlFor="f-kind">
-            Type
-          </label>
-          <select
-            id="f-kind"
-            className={selectCls}
-            value={current.kind}
-            onChange={(e) => set("kind", e.target.value)}
-          >
-            <option value="">All</option>
-            {kinds.map((k) => (
-              <option key={k.value} value={k.value}>
-                {k.label}
-              </option>
-            ))}
-          </select>
-        </>
+        <ChipGroup
+          label="Type"
+          options={[{ value: "", label: "All" }, ...kinds]}
+          value={current.kind}
+          onChange={(v) => set("kind", v)}
+          color={color}
+        />
       )}
 
+      {/* Source stays as <select> — too many options to chip */}
       {sources.length > 1 && (
-        <>
-          <label className="text-xs font-medium text-zinc-500" htmlFor="f-source">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <label
+            htmlFor="f-source"
+            style={{
+              fontSize: "0.7rem",
+              fontWeight: 700,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              minWidth: 56,
+            }}
+          >
             Source
           </label>
           <select
             id="f-source"
-            className={selectCls}
             value={current.source}
             onChange={(e) => set("source", e.target.value)}
+            aria-label="Filter by source"
+            style={selectBaseStyle}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = color;
+              e.currentTarget.style.boxShadow = `0 0 0 3px color-mix(in srgb, ${color} 18%, transparent)`;
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
           >
             <option value="">All</option>
             {sources.map((k) => (
@@ -116,19 +142,110 @@ export function FilterBar({ base, years, sessions, kinds, sources, color }: Prop
               </option>
             ))}
           </select>
-        </>
+        </div>
       )}
 
-      {(current.year || current.session || current.kind || current.source) && (
-        <button
-          type="button"
-          onClick={() => router.push(base, { scroll: false })}
-          className="rounded-lg px-2.5 py-1.5 text-sm font-medium"
-          style={{ color }}
-        >
-          ✕ Clear
-        </button>
+      {hasAnyFilter && (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button
+            type="button"
+            onClick={() => router.push(base, { scroll: false })}
+            className="btn btn-ghost"
+            aria-label="Clear all filters"
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              color: color,
+              padding: "0.35rem 0.7rem",
+            }}
+          >
+            ✕ Clear all
+          </button>
+        </div>
       )}
+    </div>
+  );
+}
+
+function ChipGroup({
+  label,
+  options,
+  value,
+  onChange,
+  color,
+}: {
+  label: string;
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+  color: string;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.6rem",
+        flexWrap: "wrap",
+      }}
+    >
+      <span
+        style={{
+          fontSize: "0.7rem",
+          fontWeight: 700,
+          color: "var(--text-muted)",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          minWidth: 56,
+        }}
+      >
+        {label}
+      </span>
+      <div
+        role="radiogroup"
+        aria-label={label}
+        style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}
+      >
+        {options.map((o) => {
+          const active = (value || "") === o.value;
+          return (
+            <button
+              key={o.value || "all"}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(o.value)}
+              style={{
+                padding: "0.3rem 0.7rem",
+                borderRadius: "9999px",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.15s var(--ease-out-quint)",
+                border: `1px solid ${active ? color : "var(--border)"}`,
+                background: active
+                  ? `color-mix(in srgb, ${color} 14%, var(--surface))`
+                  : "var(--surface-elevated)",
+                color: active ? color : "var(--text-muted)",
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.currentTarget.style.borderColor = `color-mix(in srgb, ${color} 50%, var(--border))`;
+                  e.currentTarget.style.color = "var(--text)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.currentTarget.style.borderColor = "var(--border)";
+                  e.currentTarget.style.color = "var(--text-muted)";
+                }
+              }}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -3,6 +3,24 @@ import { notFound } from "next/navigation";
 import { getSubject } from "@/lib/subjects";
 import { SectionView } from "@/components/SectionView";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}): Promise<Metadata> {
+  const { code } = await params;
+  const subject = getSubject(code);
+  if (!subject) return {};
+  return {
+    title: `${subject.name} — Topical Past Papers`,
+    description: `Topical past paper questions for ${subject.name} (${subject.code}), organised by topic from community collections.`,
+    openGraph: {
+      title: `${subject.name} — Topical Papers | A-Level Hub`,
+      description: `Topical questions for ${subject.name} (${subject.code}), organised by topic.`,
+    },
+  };
+}
+
 export const metadata: Metadata = { title: "Topical Past Papers" };
 
 export default async function TopicalPage({

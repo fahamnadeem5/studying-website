@@ -492,3 +492,14 @@ body {
 .float-bob { animation: floatBob 4s ease-in-out infinite; }
 .float-bob-delay-1 { animation-delay: -1.3s; }
 .float-bob-delay-2 { animation-delay: -2.6s; }
+
+/* ─── Prefers-reduced-motion ───────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .aurora, .gradient-pan, .shimmer { animation: none !important; }
+}

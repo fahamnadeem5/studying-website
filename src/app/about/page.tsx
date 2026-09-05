@@ -8,7 +8,13 @@ import Reveal from "@/components/Reveal";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Why A-Level Hub exists, what it indexes, and where the resources come from.",
+    "Why A-Level Hub exists, what it indexes, and where the resources come from. A free, ad-free, single-click index of CAIE A-Level past papers, notes and books.",
+  openGraph: {
+    title: "About — A-Level Hub",
+    description:
+      "Why A-Level Hub exists, what it indexes, and where the resources come from.",
+    type: "website",
+  },
 };
 
 export const revalidate = 3600;

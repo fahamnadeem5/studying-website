@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuroraBackground from "@/components/AuroraBackground";
 import ThemeToggle from "@/components/ThemeToggle";
+import { HeaderSearch } from "@/components/HeaderSearch";
+import { CommandPalette } from "@/components/CommandPalette";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -15,12 +17,26 @@ export const metadata: Metadata = {
   },
   description:
     "Every CAIE A-Level resource in one place: yearly past papers, topical papers, notes and books for Maths, Physics, Computer Science, Further Maths, Biology and Chemistry — links from PapaCambridge, Reddit and more.",
-  metadataBase: new URL("https://alevelhub.example.com"),
+  metadataBase: new URL("https://studying-website.vercel.app"),
   openGraph: {
     title: "A-Level Hub",
     description:
       "Yearly & topical past papers, notes and books for CAIE A-Level Maths, Physics, CS, Further Maths, Bio & Chem.",
     type: "website",
+    siteName: "A-Level Hub",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "A-Level Hub",
+    description:
+      "Yearly & topical past papers, notes and books for CAIE A-Level.",
+    images: ["/opengraph-image"],
+  },
+  robots: { index: true, follow: true },
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
 };
 
@@ -45,6 +61,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body style={{ background: "var(--surface)", color: "var(--text)" }}>
         <AuroraBackground />
+
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-[var(--brand)] focus:px-4 focus:py-2 focus:text-white focus:font-bold focus:shadow-lg"
+        >
+          Skip to main content
+        </a>
 
         <header
           className="glass sticky top-0 z-30"
@@ -76,13 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 Subjects
               </Link>
-              <Link
-                href="/search"
-                className="rounded-lg px-3 py-1.5 transition-colors hover:bg-[var(--surface-muted)]"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Search
-              </Link>
+              <HeaderSearch />
               <Link
                 href="/about"
                 className="rounded-lg px-3 py-1.5 transition-colors hover:bg-[var(--surface-muted)]"
@@ -97,9 +114,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <main style={{ minHeight: "calc(100vh - 56px - 120px)" }}>
+        <main id="main" style={{ minHeight: "calc(100vh - 56px - 120px)" }}>
           {children}
         </main>
+
+        <CommandPalette open={false} onClose={() => {}} />
 
         <footer style={{ borderTop: "1px solid var(--border)", background: "var(--surface-muted)" }}>
           <div

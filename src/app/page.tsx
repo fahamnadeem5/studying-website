@@ -7,6 +7,24 @@ import type { SubjectCounts, SubjectMeta } from "@/lib/types";
 
 export const revalidate = 3600;
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "A-Level Hub",
+  url: "https://studying-website.vercel.app",
+  description:
+    "Every CAIE A-Level resource in one place: yearly past papers, topical papers, notes and books for Maths, Physics, CS, Further Maths, Biology and Chemistry.",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate:
+        "https://studying-website.vercel.app/search?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function HomePage() {
   const { perSubject, total } = SUBJECTS.reduce(
     (acc, s) => {
@@ -24,6 +42,10 @@ export default function HomePage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <section style={{ paddingTop: "5rem", paddingBottom: "4rem" }}>
         <div className="mx-auto w-full max-w-6xl px-4 text-center">
           <Reveal>

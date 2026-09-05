@@ -2,7 +2,16 @@ import type { Metadata } from "next";
 import { SUBJECTS } from "@/lib/subjects";
 import { SearchClient } from "./SearchClient";
 
-export const metadata: Metadata = { title: "Search" };
+export const metadata: Metadata = {
+  title: "Search",
+  description:
+    "Search across 8,000+ indexed CAIE A-Level past papers, mark schemes, notes, and books. Filter by subject, year, session, kind or source.",
+  openGraph: {
+    title: "Search — A-Level Hub",
+    description:
+      "Search across all indexed CAIE A-Level past papers, mark schemes, notes, and books.",
+  },
+};
 
 export default async function SearchPage({
   searchParams,
