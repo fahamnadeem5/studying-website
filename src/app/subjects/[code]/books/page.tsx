@@ -21,8 +21,6 @@ export async function generateMetadata({
   };
 }
 
-export const metadata: Metadata = { title: "Books" };
-
 export default async function BooksPage({
   params,
   searchParams,

@@ -21,8 +21,6 @@ export async function generateMetadata({
   };
 }
 
-export const metadata: Metadata = { title: "Notes" };
-
 export default async function NotesPage({
   params,
   searchParams,

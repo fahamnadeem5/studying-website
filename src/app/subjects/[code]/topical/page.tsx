@@ -21,8 +21,6 @@ export async function generateMetadata({
   };
 }
 
-export const metadata: Metadata = { title: "Topical Past Papers" };
-
 export default async function TopicalPage({
   params,
   searchParams,

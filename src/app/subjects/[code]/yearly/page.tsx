@@ -33,8 +33,6 @@ export async function generateMetadata({
   };
 }
 
-export const metadata: Metadata = { title: "Yearly Past Papers" };
-
 const PAGE_SIZE = 100;
 
 export default async function YearlyPage({
