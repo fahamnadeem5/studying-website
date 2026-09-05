@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { SUBJECTS } from "@/lib/subjects";
 import { subjectCounts } from "@/lib/db";
-import { CountPill, tint } from "@/components/ResourceParts";
+import { CountPill } from "@/components/ResourceParts";
+import { tint } from "@/lib/utils";
 import Reveal from "@/components/Reveal";
 import type { SubjectCounts, SubjectMeta } from "@/lib/types";
 

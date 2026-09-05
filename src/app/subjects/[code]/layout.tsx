@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSubject } from "@/lib/subjects";
 import { subjectCounts } from "@/lib/db";
-import { tint } from "@/components/ResourceParts";
+import { tint } from "@/lib/utils";
 import { SubjectNav } from "@/components/SubjectNav";
 
 export default async function SubjectLayout({

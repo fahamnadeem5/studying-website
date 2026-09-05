@@ -31,7 +31,7 @@ export async function GET() {
   }
   if (typeof dbPath === "string") {
     try {
-      out.dbExists = existsSync(dbPath);
+      out.dbExists = existsSync(/*turbopackIgnore: true*/ dbPath);
     } catch (e) {
       out.dbExists = `existsSync ERR: ${(e as Error).message}`;
     }

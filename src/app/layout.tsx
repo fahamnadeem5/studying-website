@@ -5,7 +5,6 @@ import "./globals.css";
 import AuroraBackground from "@/components/AuroraBackground";
 import ThemeToggle from "@/components/ThemeToggle";
 import { HeaderSearch } from "@/components/HeaderSearch";
-import { CommandPalette } from "@/components/CommandPalette";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -117,8 +116,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="main" style={{ minHeight: "calc(100vh - 56px - 120px)" }}>
           {children}
         </main>
-
-        <CommandPalette open={false} onClose={() => {}} />
 
         <footer style={{ borderTop: "1px solid var(--border)", background: "var(--surface-muted)" }}>
           <div

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SUBJECTS } from "@/lib/subjects";
 import { subjectCounts } from "@/lib/db";
-import { tint } from "@/components/ResourceParts";
+import { tint } from "@/lib/utils";
 import Reveal from "@/components/Reveal";
 
 export const metadata: Metadata = {

@@ -4,10 +4,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { ResourceRow, SubjectMeta } from "@/lib/types";
 import { SITES } from "@/lib/sites";
 import { relativeTime, sessionDisplay } from "@/lib/format";
+import { tint } from "@/lib/utils";
 
-export function tint(hex: string, alpha: string): string {
-  return hex + alpha;
-}
+export { tint };
 
 /* ─── Kind badge ─────────────────────────────────────────────────── */
 
