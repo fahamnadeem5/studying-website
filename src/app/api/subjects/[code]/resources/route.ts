@@ -5,6 +5,11 @@ import type { ResourceType, SessionLetter } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+function clamp(v: number, lo: number, hi: number): number {
+  if (!Number.isFinite(v)) return lo;
+  return Math.max(lo, Math.min(hi, v));
+}
+
 export async function GET(
   req: Request,
   ctx: { params: Promise<{ code: string }> }
@@ -28,8 +33,8 @@ export async function GET(
     topic: sp.get("topic") ?? undefined,
     source: sp.get("source") ?? undefined,
     paper: sp.get("paper") ?? undefined,
-    limit: Math.min(Number(sp.get("limit") ?? 500), 1000),
-    offset: Number(sp.get("offset") ?? 0),
+    limit: clamp(Number(sp.get("limit") ?? 500), 1, 1000),
+    offset: clamp(Number(sp.get("offset") ?? 0), 0, 1_000_000),
   };
   const rows = listResources(opts);
   const total = countResources({

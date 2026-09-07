@@ -51,8 +51,8 @@ export function HeaderSearch() {
         </svg>
         <span className="hidden sm:inline">Search</span>
         <kbd
+          className="hidden sm:inline"
           style={{
-            display: "none",
             fontSize: "0.6rem",
             border: "1px solid var(--border)",
             borderRadius: "4px",
@@ -60,7 +60,6 @@ export function HeaderSearch() {
             background: "var(--surface)",
             color: "var(--text-faint)",
           }}
-          className="sm:inline"
         >
           ⌘K
         </kbd>

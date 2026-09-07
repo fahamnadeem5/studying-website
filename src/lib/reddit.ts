@@ -1,36 +1,57 @@
 /**
  * Reddit helper used by both the batch scraper and the on-demand
- * `/api/live-search` route. Reddit's free tier (100 QPM, non-commercial)
- * is respected: one request per ~2s and in-memory dedupe of identical
- * in-flight queries.
+ * `/api/live-search` route.
  *
- * Credentials (all optional — Reddit is disabled when none are set):
- *   REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET
- *   plus one of:
- *     REDDIT_REFRESH_TOKEN            (web/installed app)
- *     REDDIT_USERNAME + REDDIT_PASSWORD  (script app — personal use)
- *     REDDIT_ALLOW_ANONYMOUS=1          (anonymous read-only client_credentials)
+ * Three modes, picked automatically:
+ *
+ *   1. **Authenticated OAuth** — set REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET
+ *      (+ REDDIT_REFRESH_TOKEN, or USERNAME+PASSWORD, or REDDIT_ALLOW_ANONYMOUS=1).
+ *      100 QPM. Used for the heavy batch scraper.
+ *
+ *   2. **Public JSON** — no creds. Hits `reddit.com/r/<sub>/search.json`
+ *      which is unauthenticated, capped at ~10 QPM and a custom User-Agent
+ *      is required (Reddit returns 429/403 otherwise). This is what powers
+ *      the on-site /api/live-search when there are no API keys.
+ *
+ *   3. **Disabled** — only the case when something throws.
+ *
+ * Identical in-flight queries are deduped, and public-mode queries are
+ * serialised through a single-slot mutex to stay under the 10 QPM cap.
  */
 
 const OAUTH_URL = "https://www.reddit.com/api/v1/access_token";
 const API_URL = "https://oauth.reddit.com";
+const PUBLIC_BASE = "https://www.reddit.com";
+const PUBLIC_QPM = 10; // Reddit public JSON cap ≈10 req/min
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
 const inflight = new Map<string, Promise<unknown>>();
 
+/**
+ * Returns true if Reddit search is available — either via
+ * authenticated OAuth or the unauthenticated public JSON endpoint.
+ *
+ * Public mode is on by default (Reddit's `.json` endpoints need no key —
+ * just a descriptive `User-Agent`). Set `REDDIT_FORCE_DISABLED=1` to
+ * turn live search off entirely.
+ */
 export function redditConfigured(): boolean {
-  return Boolean(
-    process.env.REDDIT_CLIENT_ID && process.env.REDDIT_CLIENT_SECRET
-  );
+  if (process.env.REDDIT_FORCE_DISABLED === "1") return false;
+  return true; // public `.json` is always available
 }
 
 export function redditMissingHint(): string {
   return [
-    "Reddit is not configured. Create a free app at",
-    "https://www.reddit.com/prefs/apps (script type) and set",
-    "REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USERNAME,",
-    "REDDIT_PASSWORD in .env.local / environment.",
+    "Live Reddit search is disabled. Unset REDDIT_FORCE_DISABLED, or set",
+    "REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET to upgrade to the authenticated",
+    "tier (100 QPM).",
   ].join(" ");
+}
+
+function publicMode(): boolean {
+  return !(
+    process.env.REDDIT_CLIENT_ID && process.env.REDDIT_CLIENT_SECRET
+  );
 }
 
 export class RedditError extends Error {
@@ -123,6 +144,12 @@ interface SearchOptions {
   after?: string;
 }
 
+/**
+ * Search Reddit. Routes to authenticated OAuth (creds set) or
+ * public `.json` endpoint (no creds). The public path is rate-
+ * limited (~10 QPM) — in-flight identical queries are deduped
+ * AND global `publicMutex` serialises public calls.
+ */
 export async function searchReddit(
   query: string,
   opts: SearchOptions = {}
@@ -132,7 +159,9 @@ export async function searchReddit(
   const prior = inflight.get(key);
   if (prior) return prior as Promise<RedditPost[]>;
 
-  const p = doSearch(query, opts);
+  const p = publicMode()
+    ? doSearchPublic(query, opts)
+    : doSearchOAuth(query, opts);
   inflight.set(key, p);
   try {
     return await p;
@@ -281,6 +310,72 @@ export function extractFileLinks(text: string): string[] {
     }
   }
   return out;
+}
+
+/* ── Public JSON search (~10 QPM, no API key) ──────────────────────────── */
+let publicMutex = Promise.resolve();
+
+async function doSearchPublic(
+  query: string,
+  opts: SearchOptions
+): Promise<RedditPost[]> {
+  const q = query.trim();
+  if (q.length < 3) return [];
+
+  // rate-limit: serialise through a single-slot mutex
+  publicMutex = publicMutex.then(() => delay(PUBLIC_QPM)).catch(() => {});
+  await publicMutex;
+
+  const subreddit = opts.subreddit ?? "alevel";
+  const url = new URL(`${PUBLIC_BASE}/r/${subreddit}/search.json`);
+  url.searchParams.set("q", q);
+  url.searchParams.set("restrict_sr", "1");
+  url.searchParams.set("sort", opts.sort ?? "relevance");
+  url.searchParams.set("t", "all");
+  url.searchParams.set("limit", String(opts.limit ?? 25));
+
+  const res = await fetch(url.toString(), {
+    headers: { "User-Agent": "alevelhub:public-search:v1.0" },
+    signal: AbortSignal.timeout(20_000),
+  });
+
+  if (res.status === 429) {
+    await new Promise((r) => setTimeout(r, 6_000));
+    return await doSearchPublic(query, opts); // retry once
+  }
+  if (!res.ok) return [];
+
+  const json = (await res.json()) as {
+    data?: { children?: Array<{ kind: string; data: Record<string, unknown> }> };
+  };
+  const children = json.data?.children ?? [];
+  return children
+    .filter((c) => c.kind === "t3")
+    .map((c) => postFromRaw(c.data))
+    .filter(Boolean) as RedditPost[];
+}
+
+/* ── OAuth search (existing, unchanged save for rate guard) ─────────────── */
+async function doSearchOAuth(
+  query: string,
+  opts: SearchOptions
+): Promise<RedditPost[]> {
+  const key = JSON.stringify({ query, opts });
+  const prior = inflight.get(key);
+  if (prior) return prior as Promise<RedditPost[]>;
+
+  const p = doSearch(query, opts);
+  inflight.set(key, p);
+  try {
+    return await p;
+  } finally {
+    inflight.delete(key);
+  }
+}
+
+/** Simple delay helper for QPM throttling. */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /* ----------------------------- classification --------------------------- */

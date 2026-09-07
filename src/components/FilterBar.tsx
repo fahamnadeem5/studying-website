@@ -65,7 +65,6 @@ export function FilterBar({ base, years, sessions, kinds, sources, color }: Prop
         border: "1px solid var(--border)",
       }}
     >
-      {/* Chip groups for small option sets */}
       {years.length > 0 && (
         <ChipGroup
           label="Year"
@@ -97,7 +96,6 @@ export function FilterBar({ base, years, sessions, kinds, sources, color }: Prop
         />
       )}
 
-      {/* Source stays as <select> — too many options to chip */}
       {sources.length > 1 && (
         <div
           style={{
@@ -157,6 +155,7 @@ export function FilterBar({ base, years, sessions, kinds, sources, color }: Prop
               fontWeight: 600,
               color: color,
               padding: "0.35rem 0.7rem",
+              minHeight: 36,
             }}
           >
             ✕ Clear all
@@ -216,9 +215,9 @@ function ChipGroup({
               aria-checked={active}
               onClick={() => onChange(o.value)}
               style={{
-                padding: "0.3rem 0.7rem",
+                padding: "0.45rem 0.85rem",
                 borderRadius: "9999px",
-                fontSize: "0.75rem",
+                fontSize: "0.78rem",
                 fontWeight: 600,
                 cursor: "pointer",
                 transition: "all 0.15s var(--ease-out-quint)",
@@ -227,6 +226,7 @@ function ChipGroup({
                   ? `color-mix(in srgb, ${color} 14%, var(--surface))`
                   : "var(--surface-elevated)",
                 color: active ? color : "var(--text-muted)",
+                minHeight: 36,
               }}
               onMouseEnter={(e) => {
                 if (!active) {

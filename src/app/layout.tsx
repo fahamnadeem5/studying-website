@@ -37,6 +37,20 @@ export const metadata: Metadata = {
     icon: "/favicon.svg",
     apple: "/favicon.svg",
   },
+  other: {
+    "theme-color": "#ffffff",
+    "format-detection": "telephone=no",
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -72,14 +86,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           className="glass sticky top-0 z-30"
           style={{ borderBottom: "1px solid var(--border)" }}
         >
-          <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
+          <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-2 sm:gap-3 px-4">
             <Link
               href="/"
-              className="flex items-center gap-2.5 font-bold tracking-tight transition-opacity hover:opacity-80"
+              className="flex shrink-0 items-center gap-2.5 font-bold tracking-tight transition-opacity hover:opacity-80 min-h-[44px] min-w-[44px]"
               style={{ color: "var(--text)" }}
+              aria-label="A-Level Hub home"
             >
               <span
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-sm font-black text-white"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-black text-white"
                 style={{
                   background: "linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%)",
                   boxShadow: "0 0 16px -4px color-mix(in srgb, var(--brand) 60%, transparent)",
@@ -90,18 +105,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="hidden sm:inline">A-Level Hub</span>
             </Link>
 
-            <nav className="ml-auto flex items-center gap-1 text-sm font-medium">
+            <nav
+              aria-label="Primary"
+              className="ml-auto flex items-center gap-1 text-sm font-medium"
+            >
               <Link
                 href="/"
-                className="rounded-lg px-3 py-1.5 transition-colors hover:bg-[var(--surface-muted)]"
+                className="rounded-lg px-2.5 py-2 sm:px-3 sm:py-1.5 transition-colors hover:bg-[var(--surface-muted)] min-h-[44px] flex items-center"
                 style={{ color: "var(--text-muted)" }}
               >
-                Subjects
+                <span className="hidden sm:inline">Subjects</span>
+                <span className="sm:hidden" aria-label="Subjects">📚</span>
               </Link>
               <HeaderSearch />
               <Link
                 href="/about"
-                className="rounded-lg px-3 py-1.5 transition-colors hover:bg-[var(--surface-muted)]"
+                className="rounded-lg px-2.5 py-2 sm:px-3 sm:py-1.5 transition-colors hover:bg-[var(--surface-muted)] min-h-[44px] flex items-center"
                 style={{ color: "var(--text-muted)" }}
               >
                 About

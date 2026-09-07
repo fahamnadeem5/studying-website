@@ -47,7 +47,10 @@ export default async function YearlyPage({
   if (!subject) notFound();
 
   const sp = await searchParams;
-  const year = Number(sp.year) || undefined;
+  const year = (() => {
+    const n = Number(sp.year);
+    return Number.isFinite(n) && n >= 1900 && n <= 2100 ? n : undefined;
+  })();
   const session = (sp.session as SessionLetter) || undefined;
   const kind = typeof sp.kind === "string" ? sp.kind : undefined;
   const source = typeof sp.source === "string" ? sp.source : undefined;
