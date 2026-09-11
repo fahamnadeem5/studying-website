@@ -1,28 +1,21 @@
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "A-Level Hub",
+    name: "A-Level Hub — CAIE Past Papers, Notes & Books",
     short_name: "A-Level Hub",
     description:
-      "Every CAIE A-Level resource in one place: past papers, notes and books.",
+      "Every CAIE A-Level resource in one place: yearly past papers, topical papers, notes and books.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#6366f1",
-    orientation: "portrait-primary",
     icons: [
       {
-        src: "/icon.png",
-        sizes: "64x64",
-        type: "image/png",
-        purpose: "any",
-      },
-      {
-        src: "/apple-icon.png",
-        sizes: "180x180",
-        type: "image/png",
-        purpose: "any",
+        src: "/favicon.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+        purpose: "maskable",
       },
     ],
   };
